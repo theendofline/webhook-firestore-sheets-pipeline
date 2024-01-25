@@ -78,6 +78,9 @@ def reconcile_with_google_sheet(service, SPREADSHEET_ID, RANGE_NAME):
             createdAt_formatted = createdAt_kyiv.strftime("%d %b, %Y %H:%M:%S")
             new_values.append([createdAt_formatted, data.get('scannerName'), "", data['proposalLink']])
 
+    # Sort new_values by date and time before appending to Google Sheet
+    new_values.sort(key=lambda x: datetime.strptime(x[0], "%d %b, %Y %H:%M:%S"))
+
     # Append new unique data to the Google Sheet if there are any new entries.
     if new_values:
         service.spreadsheets().values().append(
@@ -106,6 +109,9 @@ def webhook_to_sheets(request):
 
         # Store the proposal data in Firestore.
         store_data_in_firestore(proposal_data)
+
+        # Introduce a pause of 10 seconds
+        time.sleep(10)
 
         # Authenticate and prepare to reconcile the data with Google Sheets.
         service = authenticate_google_sheets()
