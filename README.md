@@ -1,4 +1,4 @@
-# Servise X, Firestore, and Google Sheets data pipeline
+# Service X, Firestore, and Google Sheets data pipeline
 
 ## Overview
  The project is a data pipeline based on the integration of Service X, Google Cloud Functions, Google Cloud Scheduler and Google Sheets API. It seamlessly synchronizes data between Service X, Firestore and Google Sheets.
