@@ -15,7 +15,13 @@ The first function webhook-to-firestore-pipeline receives data from batches of P
  
 ****************************************************************************************************************
 
-P.S. Some other things, like setting up alerting by log events and creating a service account, I didn't include in the description, but I'll leave the references below.
+P.S. Some other things, like setting up alerting by log events, creating a service account and Cloud Scheduler job, I didn't include in the description, but I'll leave the references below.
+- [Service account overview](https://cloud.google.com/iam/docs/service-account-overview) 
+- [Logging and Monitoring in Google Cloud](https://www.cloudskillsboost.google/paths/11/course_templates/99) 
+- [Configure Service Accounts and IAM Roles for Google Cloud Course Lab](https://www.cloudskillsboost.google/course_templates/702)
+- [Configure Service Accounts and IAM for Google Cloud: Challenge Lab](https://www.cloudskillsboost.google/focuses/67219?catalog_rank=%7B%22rank%22%3A1%2C%22num_filters%22%3A0%2C%22has_search%22%3Atrue%7D&parent=catalog&search_id=29556384) 
+
+- [Cloud Scheduler: Qwik Start](https://www.cloudskillsboost.google/focuses/3556?catalog_rank=%7B%22rank%22%3A1%2C%22num_filters%22%3A0%2C%22has_search%22%3Atrue%7D&parent=catalog&search_id=29556428)
 
 P.P.S. Many kudos to Keria for his advice on error handling and the error-first approach in code writing! :)
 
