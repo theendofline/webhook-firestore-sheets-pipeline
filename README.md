@@ -17,7 +17,7 @@ The first function webhook-to-firestore-pipeline receives data from batches of P
 
 P.S. Some other things, like setting up alerting by log events and creating a service account, I didn't include in the description, but I'll leave the references below.
 
-P.P.S. Many kudos to Keria for his advice on the error-first approach to code writing and error handling!
+P.P.S. Many kudos to Keria for his advice on error handling and the error-first approach in code writing! :)
 
  
 ## Features
