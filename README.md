@@ -23,7 +23,7 @@ P.S. Some other things, like setting up alerting by log events, creating a servi
 
 - [Cloud Scheduler: Qwik Start](https://www.cloudskillsboost.google/focuses/3556?catalog_rank=%7B%22rank%22%3A1%2C%22num_filters%22%3A0%2C%22has_search%22%3Atrue%7D&parent=catalog&search_id=29556428)
 
-P.P.S. Many kudos to Keria for his advice on error handling and the error-first approach in code writing! :)
+P.P.S. Special kudos to Keria for his advice on error handling and the error-first approach in code writing! :)
 
  
 ## Features
