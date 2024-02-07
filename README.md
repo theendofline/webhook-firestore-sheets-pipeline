@@ -9,7 +9,7 @@ The first function webhook-to-firestore-pipeline receives data from batches of P
  In the same function, the extracted data is saved to the Google Firestore database, going through a couple more minor processes. This completes the first part of the data pipeline.
 
  ### firestore-to-google-sheets-pipeline
- The second part of the data pipeline is a function to extract and reconcile data between Firestore and Google Sheets. Using Cloud Scheduler (the cloud analog of `cron`), the function is called by HTTP trigger at specified intervals, reconciling data by unique identifier between the database and the spreadsheet, and adding new data to the spreadsheet. The process includes authentication by Google service account, date normalization for easy reading by meatbags :)) and... And that's it! It's not that big of a deal. Saves at least 4 hours a week of dumb mechanical work.
+ The second part of the data pipeline is a function to extract and reconcile data between Firestore and Google Sheets. Using Cloud Scheduler (the cloud analog of `cron`), the function is called by HTTP trigger at specified intervals, reconciling data by unique identifier between the database and the spreadsheet (using Sheets API), and adding new data to the spreadsheet. The process includes authentication by Google service account, date normalization for easy reading by meatbags :)) and... And that's it! It's not that big of a deal. Saves at least 4 hours a week of dumb mechanical work.
 
  If we talk about the ultimate goal of the process, the data exported to Sheets are further processed, which gives the data a qualitative assessment measured in quantitative values (yes, it is possible!), visualized, and used for iterative optimization of workflow and business processes.  
  
