@@ -2,6 +2,8 @@
 
 ## Overview
  The project is a data pipeline based on the integration of Service X, Google Cloud Functions, Google Firestore (NoSQL DB), Google Cloud Scheduler and Google Sheets API. It seamlessly synchronizes data between Service X, Firestore, and Google Sheets.
+ 
+![etl-pipeline](https://github.com/theendofline/webhook-firestore-sheets-pipeline/assets/19670612/082b7cc4-48fb-4575-a3f6-65f53f66d689)
 
 ### webhook-to-firestore-pipeline
 The first function webhook-to-firestore-pipeline receives data from batches of POST webhooks with JSON, determines which of the POST requests fits (validation ingress data), and extracts certain keys with values (3 types in total: date, name, and hyperlink, all three are string). In this case, the POST request is the HTTP trigger for the function execution. 
