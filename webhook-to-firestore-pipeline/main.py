@@ -1,9 +1,7 @@
+import flask
 from flask import jsonify
-from google.api_core.exceptions import GoogleAPICallError
 from google.cloud import firestore
-
-# Importing necessary libraries. Flask for creating a web server, jsonify to format responses as JSON,
-# and Firestore to interact with Google Firestore database.
+from google.api_core.exceptions import GoogleAPICallError
 
 # Initialize Firestore client
 try:
@@ -12,31 +10,36 @@ except Exception as e:
     print(f"Error initializing Firestore client: {e}")
     db = None
 
-
-# Try to initialize the Firestore client. If it fails, catch the exception, print the error, and set 'db' to None.
-
 def store_data_in_firestore(proposal_data):
+    """
+    Store proposal data in Firestore.
+    
+    Args:
+        proposal_data (dict): Dictionary containing proposal information
+    
+    Returns:
+        bool: True if data was successfully stored, False otherwise
+    """
     if not db:
         print("Firestore client not initialized.")
         return False
-    # If the Firestore client is not initialized, log a message and return False.
 
     try:
+        # Check if required fields are present
         if 'scannerName' in proposal_data and 'uid' in proposal_data:
             uid = proposal_data['uid']
-            proposalLink = f"https://3rd_party_service_link/{uid}"
+            proposalLink = f"https://www.upwork.com/ab/proposals/{uid}"
             document_id = uid
+            
+            # Prepare data for Firestore
             firestore_data = {
                 'proposalLink': proposalLink,
                 'createdAt': proposal_data['createdAt'],
                 'scannerName': proposal_data['scannerName'],
             }
-            # Validate if necessary data is present. Then, create a Firestore data document with proposal link,
-            # creation time, and scanner name.
-
+            
+            # Store data in Firestore
             db.collection('proposals').document(document_id).set(firestore_data)
-            # Store the document in the Firestore 'proposals' collection with 'uid' as the document ID.
-
             return True
         else:
             print("Missing required fields in proposal data.")
@@ -44,32 +47,50 @@ def store_data_in_firestore(proposal_data):
     except GoogleAPICallError as e:
         print(f"Error storing data in Firestore: {e}")
         return False
-    # Catch exceptions specific to Firestore API calls. If an error occurs, log it and return False.
-
 
 def webhook_to_firestore(request):
+    """
+    Handle webhook requests and store data in Firestore.
+    
+    Args:
+        request (flask.Request): Flask request object
+    
+    Returns:
+        tuple: JSON response and HTTP status code
+    """
+    # Ensure the request method is POST
     if request.method != 'POST':
         return jsonify(error="This function only responds to POST requests."), 405
-    # This function only accepts POST requests. If the request is not POST, return an error message with a 405 HTTP
-    # status code.
 
+    # Parse JSON data from the request
     data = request.get_json(silent=True)
-    proposal_data = data.get('data', {}).get('proposal', {})
-    # Extract JSON data from the request. If the data is not properly formatted, it defaults to an empty dictionary.
+    if not data:
+        return jsonify(error="Invalid JSON data"), 400
 
-    if not proposal_data or not proposal_data.get('createdAt') or not proposal_data.get(
-            'scannerName') or not proposal_data.get('uid'):
-        return jsonify(error="Missing required proposal data"), 400
-    # Check for required fields in the proposal data. If any are missing, return an error message with a 400 HTTP
-    # status code.
+    # Extract relevant data from the request
+    data_content = data.get('data', {})
+    proposal_data = data_content.get('proposal', {})
+    scanner_name = data_content.get('scannerName')
 
+    # Validate required fields
+    if not proposal_data:
+        return jsonify(error="Missing 'proposal' data"), 400
+    if not proposal_data.get('createdAt'):
+        return jsonify(error="Missing 'createdAt' in proposal data"), 400
+    if not proposal_data.get('uid'):
+        return jsonify(error="Missing 'uid' in proposal data"), 400
+    if not scanner_name:
+        return jsonify(error="Missing 'scannerName' in data"), 400
+
+    # Check if Firestore client is initialized
     if not db:
         return jsonify(error="Firestore client not initialized, cannot process request."), 500
-    # If the Firestore client is not initialized, return an error message with a 500 HTTP status code.
 
+    # Add 'scannerName' to 'proposal_data'
+    proposal_data['scannerName'] = scanner_name
+
+    # Attempt to store data in Firestore
     if store_data_in_firestore(proposal_data):
         return jsonify(success=True, message="Data stored in Firestore successfully.")
     else:
         return jsonify(error="Failed to store data in Firestore."), 500
-    # Attempt to store the data in Firestore using the 'store_data_in_firestore' function. Respond
-    # with a success or error message based on the outcome.
