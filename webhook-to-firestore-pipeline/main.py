@@ -1,75 +1,114 @@
+import flask
 from flask import jsonify
-from google.api_core.exceptions import GoogleAPICallError
 from google.cloud import firestore
+from google.api_core.exceptions import GoogleAPICallError
+import logging
 
-# Importing necessary libraries. Flask for creating a web server, jsonify to format responses as JSON,
-# and Firestore to interact with Google Firestore database.
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize Firestore client
 try:
     db = firestore.Client()
+    logger.info("Firestore client initialized successfully.")
 except Exception as e:
-    print(f"Error initializing Firestore client: {e}")
+    logger.error(f"Error initializing Firestore client: {e}")
     db = None
 
+def flatten_dict(d, parent_key='', sep='_'):
+    """
+    Flatten nested dictionaries, creating keys with separator.
+    
+    Args:
+        d (dict): The dictionary to flatten
+        parent_key (str): The string to prepend to dictionary's keys
+        sep (str): The string used to separate flattened keys
+    
+    Returns:
+        dict: A flattened dictionary
+    """
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
-# Try to initialize the Firestore client. If it fails, catch the exception, print the error, and set 'db' to None.
-
-def store_data_in_firestore(proposal_data):
+def store_data_in_firestore(data):
+    """
+    Store all data in Firestore, handling any structure.
+    
+    Args:
+        data (dict): Dictionary containing all the data from the webhook
+    
+    Returns:
+        bool: True if data was successfully stored, False otherwise
+    """
     if not db:
-        print("Firestore client not initialized.")
+        logger.error("Firestore client not initialized.")
         return False
-    # If the Firestore client is not initialized, log a message and return False.
 
     try:
-        if 'scannerName' in proposal_data and 'uid' in proposal_data:
-            uid = proposal_data['uid']
-            proposalLink = f"https://3rd_party_service_link/{uid}"
-            document_id = uid
-            firestore_data = {
-                'proposalLink': proposalLink,
-                'createdAt': proposal_data['createdAt'],
-                'scannerName': proposal_data['scannerName'],
-            }
-            # Validate if necessary data is present. Then, create a Firestore data document with proposal link,
-            # creation time, and scanner name.
-
-            db.collection('proposals').document(document_id).set(firestore_data)
-            # Store the document in the Firestore 'proposals' collection with 'uid' as the document ID.
-
-            return True
-        else:
-            print("Missing required fields in proposal data.")
+        # Flatten the entire data structure
+        flat_data = flatten_dict(data)
+        logger.info("Data flattened successfully.")
+        
+        # Extract UID (assuming it's always present in data_proposal_uid)
+        uid = flat_data.get('data_proposal_uid')
+        if not uid:
+            logger.error("Missing required 'uid' in proposal data.")
             return False
-    except GoogleAPICallError as e:
-        print(f"Error storing data in Firestore: {e}")
-        return False
-    # Catch exceptions specific to Firestore API calls. If an error occurs, log it and return False.
 
+        # Store flattened data in Firestore
+        db.collection('proposals').document(uid).set(flat_data)
+        logger.info(f"Data stored successfully in Firestore with UID: {uid}")
+        return True
+    except GoogleAPICallError as e:
+        logger.error(f"Error storing data in Firestore: {e}")
+        return False
 
 def webhook_to_firestore(request):
+    """
+    Handle webhook requests and store all data in Firestore.
+    
+    Args:
+        request (flask.Request): Flask request object
+    
+    Returns:
+        tuple: JSON response and HTTP status code
+    """
+    logger.info("Received webhook request.")
+
     if request.method != 'POST':
+        logger.warning("Received non-POST request.")
         return jsonify(error="This function only responds to POST requests."), 405
-    # This function only accepts POST requests. If the request is not POST, return an error message with a 405 HTTP
-    # status code.
 
     data = request.get_json(silent=True)
-    proposal_data = data.get('data', {}).get('proposal', {})
-    # Extract JSON data from the request. If the data is not properly formatted, it defaults to an empty dictionary.
-
-    if not proposal_data or not proposal_data.get('createdAt') or not proposal_data.get(
-            'scannerName') or not proposal_data.get('uid'):
-        return jsonify(error="Missing required proposal data"), 400
-    # Check for required fields in the proposal data. If any are missing, return an error message with a 400 HTTP
-    # status code.
+    if not data:
+        logger.error("Received invalid JSON data.")
+        return jsonify(error="Invalid JSON data."), 400
 
     if not db:
+        logger.error("Firestore client not initialized, cannot process request.")
         return jsonify(error="Firestore client not initialized, cannot process request."), 500
-    # If the Firestore client is not initialized, return an error message with a 500 HTTP status code.
 
-    if store_data_in_firestore(proposal_data):
-        return jsonify(success=True, message="Data stored in Firestore successfully.")
+    logger.info("Processing webhook data...")
+    if store_data_in_firestore(data):
+        logger.info("Data successfully stored in Firestore.")
+        return jsonify(success=True, message="Data stored in Firestore successfully."), 200
     else:
+        logger.error("Failed to store data in Firestore.")
         return jsonify(error="Failed to store data in Firestore."), 500
-    # Attempt to store the data in Firestore using the 'store_data_in_firestore' function. Respond
-    # with a success or error message based on the outcome.
+
+# Uncomment these lines if you're running the app locally with Flask
+# app = flask.Flask(__name__)
+# 
+# @app.route('/', methods=['POST'])
+# def index():
+#     return webhook_to_firestore(flask.request)
+# 
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=8080, debug=True)
