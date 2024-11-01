@@ -6,7 +6,7 @@ google-auth-oauthlib==1.2.0
 pytz==2023.3.post1
 google-cloud-firestore==2.14.0
 Flask==3.0.1
-requests>=2.32.2
-urllib3>=2.2.2
+requests>=2.32.3
+urllib3>=2.2.3
 werkzeug>=3.0.3
-zipp>=3.19.1
+zipp>=3.20.2
